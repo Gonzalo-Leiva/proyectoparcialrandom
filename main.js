@@ -2,27 +2,20 @@ const express = require('express');
 const funciones = require('./cuentas.js');
 const app = express();
 
-// Middleware para poder leer datos JSON o de formularios
-app.use(express.json());
+app.use(express.json())
 
-app.post('/datos', (req, res) => {
-    const {op1,op2,fn} = req.body;
-    const bandera = funciones.find((element) => element.name===fn)
-     try {
-        if (!bandera) {
-            throw new Error('Operación no válida');
-        }
-        const resultado = bandera.value(op1,op2);
-        res.json({ resultado, bandera });
-
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+app.post("/operaciones",(req,res) => {
+    try{
+        const resul = req.body.map(e=>{
+            const func = funciones.find((o) => o.name == e.fn);
+            if(!func)throw new Error("Operacion no soportada!!!");
+            return {...e,resultado: func.value(e.op1,e.op2)};
+        });
+        res.status(201).json(resul)
+    }catch(e){
+        res.status(500).json({mensaje: e.message});
     }
-});
-
-
-
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+})
+app.listen(5000,() => {
+    console.log("app iniciada.");
+})
